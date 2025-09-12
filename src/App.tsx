@@ -20,6 +20,7 @@ import AdminAchievements from "./pages/AdminAchievements";
 import AdminInquiries from "./pages/AdminInquiries";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import Test from "./pages/Test";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/test" element={<Test />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/events" element={<Events />} />
             <Route path="/gallery" element={<Gallery />} />
