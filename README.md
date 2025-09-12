@@ -254,4 +254,4 @@ For support and questions:
 
 **Built with ❤️ for Saraswati School Gochtada**
 
-*Empowering education through technology*
+*Empowering education through technology*# School-Projact
