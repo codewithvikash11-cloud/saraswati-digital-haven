@@ -43,8 +43,12 @@ export default function AdminLogin() {
       <div className="w-full max-w-md">
         <Card className="card-elevated">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-hero-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-soft">
-              <Shield className="h-8 w-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-soft overflow-hidden">
+              <img 
+                src="/logo.svg" 
+                alt="Saraswati School Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <CardTitle className="text-2xl font-bold text-gradient">
               Admin Login

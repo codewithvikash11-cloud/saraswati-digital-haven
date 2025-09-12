@@ -24,12 +24,12 @@ export default function Header() {
           <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity group">
             {/* Logo Container */}
             <div className="relative">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-green-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                <GraduationCap className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
-              </div>
-              {/* Decorative element */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-yellow-400 rounded-full flex items-center justify-center">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-yellow-600 rounded-full"></div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow overflow-hidden">
+                <img 
+                  src="/logo.svg" 
+                  alt="Saraswati School Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
             
@@ -99,20 +99,24 @@ export default function Header() {
           
           {/* Mobile Menu Panel */}
           <div
-            className="fixed inset-y-0 right-0 z-[9999] w-full max-w-xs bg-white shadow-2xl transform transition-transform duration-300 ease-in-out"
+            className="fixed inset-y-0 right-0 z-[9999] w-full max-w-xs bg-gradient-to-b from-blue-50 to-white shadow-2xl transform transition-transform duration-300 ease-in-out"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
           >
             {/* Mobile Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-blue-200 bg-white/80 backdrop-blur-sm">
               <Link 
                 to="/" 
                 className="flex items-center space-x-3" 
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <GraduationCap className="h-6 w-6 text-white" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                  <img 
+                    src="/logo.svg" 
+                    alt="Saraswati School Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
                   <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
@@ -125,40 +129,42 @@ export default function Header() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-2"
+                className="text-gray-700 hover:text-blue-600 hover:bg-blue-100 p-2 rounded-full"
               >
                 <X className="h-6 w-6" />
               </Button>
             </div>
 
             {/* Mobile Navigation - Scrollable */}
-            <div className="flex-1 overflow-y-auto py-4">
-              <div className="space-y-1 px-4">
+            <div className="flex-1 overflow-y-auto py-6">
+              <div className="space-y-2 px-4">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-4 py-4 rounded-xl text-base font-medium transition-all duration-200 touch-manipulation ${
+                    className={`flex items-center space-x-4 px-4 py-4 rounded-xl text-base font-semibold transition-all duration-200 touch-manipulation shadow-sm ${
                       location.pathname === item.href
-                        ? 'text-white bg-gradient-to-r from-blue-600 to-green-500 shadow-md'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100'
+                        ? 'text-white bg-gradient-to-r from-blue-600 to-green-500 shadow-lg transform scale-105'
+                        : 'text-gray-800 bg-white/70 hover:bg-blue-100 hover:text-blue-700 active:bg-blue-200 border border-gray-200'
                     }`}
                   >
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
-                    <span className="flex-1">{item.name}</span>
+                    <item.icon className={`h-6 w-6 flex-shrink-0 ${
+                      location.pathname === item.href ? 'text-white' : 'text-blue-600'
+                    }`} />
+                    <span className="flex-1 font-medium">{item.name}</span>
                   </Link>
                 ))}
                 
                 {/* Mobile Admin Link */}
-                <div className="border-t border-gray-200 mt-6 pt-4">
+                <div className="border-t border-blue-200 mt-6 pt-4">
                   <Link
                     to="/admin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center space-x-3 px-4 py-4 rounded-xl text-base font-medium text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-all duration-200 touch-manipulation"
+                    className="flex items-center space-x-4 px-4 py-4 rounded-xl text-base font-semibold text-blue-700 bg-blue-100/80 hover:bg-blue-200 active:bg-blue-300 transition-all duration-200 touch-manipulation shadow-sm border border-blue-200"
                   >
-                    <Shield className="h-5 w-5 flex-shrink-0" />
-                    <span className="flex-1">Admin Panel</span>
+                    <Shield className="h-6 w-6 flex-shrink-0 text-blue-600" />
+                    <span className="flex-1 font-medium">Admin Panel</span>
                   </Link>
                 </div>
               </div>

@@ -102,8 +102,12 @@ export default function AdminDashboard() {
       <header className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
         <div className="container-custom flex items-center justify-between py-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-hero-gradient rounded-lg flex items-center justify-center shadow-soft">
-              <Users className="h-6 w-6 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-soft overflow-hidden">
+              <img 
+                src="/logo.svg" 
+                alt="Saraswati School Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gradient">Admin Panel</h1>
@@ -243,7 +247,7 @@ export default function AdminDashboard() {
                 <Eye className="h-4 w-4 mr-2" />
                 View All Events
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => navigate("/admin/events")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Event
               </Button>
