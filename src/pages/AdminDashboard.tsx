@@ -228,7 +228,7 @@ export default function AdminDashboard() {
                 <Eye className="h-4 w-4 mr-2" />
                 View All Staff
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => navigate("/admin/staff")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Staff
               </Button>
@@ -266,7 +266,7 @@ export default function AdminDashboard() {
                 <Eye className="h-4 w-4 mr-2" />
                 View Gallery
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => navigate("/admin/gallery")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Upload Media
               </Button>
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
                 <Eye className="h-4 w-4 mr-2" />
                 View All News
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => navigate("/admin/news")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Article
               </Button>
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
                 <Eye className="h-4 w-4 mr-2" />
                 View All Achievements
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => navigate("/admin/achievements")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Achievement
               </Button>

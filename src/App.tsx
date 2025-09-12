@@ -14,6 +14,10 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminStaff from "./pages/AdminStaff";
 import AdminEvents from "./pages/AdminEvents";
+import AdminGallery from "./pages/AdminGallery";
+import AdminNews from "./pages/AdminNews";
+import AdminAchievements from "./pages/AdminAchievements";
+import AdminInquiries from "./pages/AdminInquiries";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +59,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminEvents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/gallery" 
+              element={
+                <ProtectedRoute>
+                  <AdminGallery />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/news" 
+              element={
+                <ProtectedRoute>
+                  <AdminNews />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/achievements" 
+              element={
+                <ProtectedRoute>
+                  <AdminAchievements />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/inquiries" 
+              element={
+                <ProtectedRoute>
+                  <AdminInquiries />
                 </ProtectedRoute>
               } 
             />
