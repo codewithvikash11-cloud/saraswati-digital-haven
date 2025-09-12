@@ -25,12 +25,13 @@ export default function DirectorSection() {
         .from('staff')
         .select('*')
         .eq('is_director', true)
-        .single();
+        .order('display_order', { ascending: true })
+        .limit(1);
 
       if (error) {
         console.error('Error fetching director:', error);
-      } else if (data) {
-        setDirector(data);
+      } else if (data && data.length > 0) {
+        setDirector(data[0] as unknown as Director);
       }
     } catch (error) {
       console.error('Error fetching director:', error);
