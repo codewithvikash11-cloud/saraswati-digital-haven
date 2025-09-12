@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, BookOpen, Users, Calendar, Image, Newspaper, Mail, Shield } from "lucide-react";
+import { Menu, X, Users, Calendar, Image, Newspaper, Mail, Shield, GraduationCap } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const navigation = [
-  { name: "Home", href: "/", icon: BookOpen },
+  { name: "Home", href: "/", icon: GraduationCap },
   { name: "Staff", href: "/staff", icon: Users },
   { name: "Events", href: "/events", icon: Calendar },
   { name: "Gallery", href: "/gallery", icon: Image },
@@ -17,40 +17,42 @@ export default function Header() {
   const location = useLocation();
 
   return (
-    <header className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-[100]">
-      <nav className="container-custom flex items-center justify-between py-4">
-        <div className="flex lg:flex-1">
-          <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-hero-gradient rounded-lg flex items-center justify-center shadow-soft">
-              <BookOpen className="h-6 w-6 text-white" />
+    <header className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-[100] shadow-sm">
+      <nav className="container-custom flex items-center justify-between py-3">
+        {/* Logo Section */}
+        <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity group">
+            {/* Logo Container */}
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-green-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                <GraduationCap className="h-7 w-7 text-white" />
+              </div>
+              {/* Decorative element */}
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gradient">Saraswati School</h1>
-              <p className="text-xs text-muted-foreground">Excellence in Education</p>
+            
+            {/* School Name */}
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+                Saraswati School
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">Gochtada</p>
             </div>
           </Link>
         </div>
 
-        <div className="flex lg:hidden">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMobileMenuOpen(true)}
-            className="text-foreground"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <div className="hidden lg:flex lg:gap-x-8 lg:justify-center lg:flex-1">
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex lg:gap-x-1 lg:justify-center lg:flex-1">
           {navigation.map((item) => (
             <Link
               key={item.name}
               to={item.href}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 location.pathname === item.href
-                  ? "text-primary bg-primary/10 shadow-soft"
-                  : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                  ? "text-white bg-gradient-to-r from-blue-600 to-green-500 shadow-md"
+                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
               }`}
             >
               <item.icon className="h-4 w-4" />
@@ -59,13 +61,30 @@ export default function Header() {
           ))}
         </div>
 
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+        {/* Desktop Admin Button */}
+        <div className="hidden lg:flex lg:items-center lg:space-x-3">
           <Link to="/admin">
-            <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-white">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
+            >
               <Shield className="h-4 w-4 mr-2" />
               Admin
             </Button>
           </Link>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="flex lg:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
       </nav>
 
@@ -78,48 +97,59 @@ export default function Header() {
           onClick={() => setMobileMenuOpen(false)}
         />
         <div
-          className={`fixed inset-y-0 right-0 z-[9999] w-full sm:max-w-sm bg-background px-6 py-6 shadow-large transform transition-transform duration-200 ${
+          className={`fixed inset-y-0 right-0 z-[9999] w-full sm:max-w-sm bg-white px-6 py-6 shadow-2xl transform transition-transform duration-200 ${
             mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
           role="dialog"
           aria-modal="true"
         >
-          <div className="flex items-center justify-between">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between mb-6">
             <Link to="/" className="flex items-center space-x-3" onClick={() => setMobileMenuOpen(false)}>
-              <div className="w-8 h-8 bg-hero-gradient rounded-lg flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                <GraduationCap className="h-6 w-6 text-white" />
               </div>
-              <span className="text-lg font-bold text-gradient">Saraswati School</span>
+              <div>
+                <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+                  Saraswati School
+                </span>
+                <p className="text-xs text-gray-600">Gochtada</p>
+              </div>
             </Link>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(false)}
+              className="text-gray-700 hover:text-blue-600 hover:bg-blue-50"
             >
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <div className="mt-6 flow-root">
-            <div className="space-y-2">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                    location.pathname === item.href
-                      ? 'text-primary bg-primary/10'
-                      : 'text-foreground hover:bg-primary/5'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.name}</span>
-                </Link>
-              ))}
+
+          {/* Mobile Navigation */}
+          <div className="space-y-1">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                  location.pathname === item.href
+                    ? 'text-white bg-gradient-to-r from-blue-600 to-green-500 shadow-md'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.name}</span>
+              </Link>
+            ))}
+            
+            {/* Mobile Admin Link */}
+            <div className="border-t border-gray-200 mt-4 pt-4">
               <Link
                 to="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-primary hover:bg-primary/5 border-t border-border/50 mt-4 pt-6"
+                className="flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-blue-600 hover:bg-blue-50 transition-all duration-200"
               >
                 <Shield className="h-5 w-5" />
                 <span>Admin Panel</span>
