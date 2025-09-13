@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { Image, Video, FolderOpen } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Image, Video, FolderOpen, Calendar, Info } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface GalleryCategory {
   id: string;
@@ -18,7 +19,7 @@ interface GalleryItem {
   title: string | null;
   description: string | null;
   media_url: string;
-  media_type: string;
+  media_type: 'image' | 'video';
   category_id: string | null;
   created_at: string;
 }
@@ -28,6 +29,8 @@ export default function Gallery() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -49,7 +52,10 @@ export default function Gallery() {
       if (itemsResult.error) {
         console.error('Error fetching gallery items:', itemsResult.error);
       } else {
-        setGalleryItems(itemsResult.data || []);
+        setGalleryItems((itemsResult.data || []).map(item => ({
+          ...item,
+          media_type: item.media_type as 'image' | 'video'
+        })));
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -66,6 +72,11 @@ export default function Gallery() {
     if (!categoryId) return "Uncategorized";
     const category = categories.find(cat => cat.id === categoryId);
     return category?.name || "Uncategorized";
+  };
+  
+  const handleItemClick = (item: GalleryItem) => {
+    setSelectedItem(item);
+    setIsDialogOpen(true);
   };
 
   if (loading) {
@@ -128,8 +139,9 @@ export default function Gallery() {
               {filteredItems.map((item, index) => (
                 <Card
                   key={item.id}
-                  className="card-elevated hover-lift group"
+                  className="card-elevated hover-lift group cursor-pointer"
                   style={{ animationDelay: `${index * 0.1}s` }}
+                  onClick={() => handleItemClick(item)}
                 >
                   <CardContent className="p-0">
                     <div className="relative">
@@ -140,8 +152,13 @@ export default function Gallery() {
                           className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center">
+                        <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center relative group">
                           <Video className="h-12 w-12 text-primary" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-lg">
+                            <Button variant="secondary" size="sm" className="pointer-events-none">
+                              <Video className="h-4 w-4 mr-2" /> Play Video
+                            </Button>
+                          </div>
                         </div>
                       )}
                       
@@ -196,6 +213,73 @@ export default function Gallery() {
               </p>
             </div>
           )}
+          
+          {/* Item Detail Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-3xl">
+              {selectedItem && (
+                <>
+                  <DialogHeader>
+                    <DialogTitle>{selectedItem.title || 'Gallery Item'}</DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-4 space-y-4">
+                    <div className="aspect-video bg-gray-100 rounded-md overflow-hidden">
+                      {selectedItem.media_type === 'image' ? (
+                        <img 
+                          src={selectedItem.media_url} 
+                          alt={selectedItem.title || 'Gallery item'} 
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <video 
+                          src={selectedItem.media_url} 
+                          controls 
+                          autoPlay
+                          className="w-full h-full"
+                        />
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline">
+                          {selectedItem.media_type === 'image' ? (
+                            <>
+                              <Image className="h-3 w-3 mr-1" />
+                              Image
+                            </>
+                          ) : (
+                            <>
+                              <Video className="h-3 w-3 mr-1" />
+                              Video
+                            </>
+                          )}
+                        </Badge>
+                        <Badge variant="outline">
+                          {getCategoryName(selectedItem.category_id)}
+                        </Badge>
+                        <Badge variant="outline">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {new Date(selectedItem.created_at).toLocaleDateString()}
+                        </Badge>
+                      </div>
+                      
+                      {selectedItem.description && (
+                        <div className="mt-4">
+                          <h4 className="text-sm font-medium flex items-center">
+                            <Info className="h-4 w-4 mr-1" /> Description
+                          </h4>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {selectedItem.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
     </Layout>

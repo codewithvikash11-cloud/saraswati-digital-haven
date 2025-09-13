@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Shield, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -15,8 +16,15 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   
-  const { signIn } = useAuth();
+  const { signIn, user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    // If user is already logged in and is admin, redirect to admin dashboard
+    if (user && isAdmin) {
+      navigate("/admin");
+    }
+  }, [user, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,15 +32,30 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      // Validate inputs
+      if (!email.trim()) {
+        setError("Email is required");
+        setLoading(false);
+        return;
+      }
+      
+      if (!password) {
+        setError("Password is required");
+        setLoading(false);
+        return;
+      }
+      
+      const { error, success } = await signIn(email, password);
       
       if (error) {
-        setError(error.message);
-      } else {
+        setError(error.message || "Failed to sign in");
+      } else if (success) {
+        toast.success("Welcome to the admin panel");
         navigate("/admin");
       }
-    } catch (err) {
-      setError("An unexpected error occurred");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred");
+      toast.error("Login failed");
     } finally {
       setLoading(false);
     }
@@ -61,6 +84,8 @@ export default function AdminLogin() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
