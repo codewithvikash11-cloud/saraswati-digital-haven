@@ -204,20 +204,38 @@ export default function AdminStaff() {
     
     setUploading(true);
     try {
+      // Validate file size and type
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size exceeds 5MB limit');
+      }
+      
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        throw new Error('File must be JPEG, PNG, or WebP format');
+      }
+      
+      // Create a unique filename to avoid conflicts
+      const timestamp = new Date().getTime();
       const fileExt = file.name.split('.').pop();
-      const fileName = `${editingStaff.id}.${fileExt}`;
+      const fileName = `${editingStaff.id}-${timestamp}.${fileExt}`;
       const filePath = `staff-photos/${fileName}`;
 
+      // Upload the file to Supabase storage
       const { error: uploadError } = await supabase.storage
         .from('staff-photos')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          upsert: true,
+          cacheControl: '3600'
+        });
 
       if (uploadError) throw uploadError;
 
+      // Get the public URL
       const { data } = supabase.storage
         .from('staff-photos')
         .getPublicUrl(filePath);
 
+      // Update the staff record with the new photo URL
       const { error: updateError } = await supabase
         .from('staff')
         .update({ photo_url: data.publicUrl })
@@ -235,7 +253,7 @@ export default function AdminStaff() {
       console.error('Error uploading photo:', error);
       toast({
         title: "Error",
-        description: "Failed to upload photo",
+        description: error instanceof Error ? error.message : "Failed to upload photo",
         variant: "destructive",
       });
     } finally {

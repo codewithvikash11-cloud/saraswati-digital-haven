@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { User, GraduationCap, Award, Mail, Star, BookOpen, Users } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { User, GraduationCap, Award, Mail, Star, BookOpen, Users, X } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface StaffMember {
   id: string;
@@ -22,10 +24,24 @@ export default function Staff() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<StaffMember | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
     fetchStaff();
   }, []);
+  
+  const handleOpenProfile = (member: StaffMember) => {
+    setSelectedMember(member);
+    setIsDialogOpen(true);
+  };
+  
+  const filterStaffByTab = (staffList: StaffMember[]) => {
+    if (activeTab === "all") return staffList;
+    if (activeTab === "directors") return staffList.filter(member => member.is_director);
+    if (activeTab === "teachers") return staffList.filter(member => !member.is_director);
+    return staffList;
+  };
 
   const fetchStaff = async () => {
     try {
@@ -70,6 +86,109 @@ export default function Staff() {
               </div>
             </div>
           </div>
+          
+          {/* Staff Member Profile Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-3xl">
+              {selectedMember && (
+                <>
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl">{selectedMember.name}</DialogTitle>
+                    <DialogDescription className="text-primary font-medium">
+                      {selectedMember.position}
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div className="text-center">
+                      <div className="w-40 h-40 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 ring-4 ring-primary/10">
+                        {selectedMember.photo_url ? (
+                          <img 
+                            src={selectedMember.photo_url} 
+                            alt={selectedMember.name} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error(`Failed to load image: ${selectedMember.photo_url}`);
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder.svg';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <User className="h-20 w-20 text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {selectedMember.is_director && (
+                        <Badge className="mt-4 bg-primary text-white hover:bg-primary/90 border-none">
+                          Director
+                        </Badge>
+                      )}
+                      
+                      {(selectedMember as StaffMember & { email?: string }).email && (
+                        <div className="flex items-center justify-center mt-4 text-sm">
+                          <Mail className="h-4 w-4 mr-2 text-primary" />
+                          <a href={`mailto:${(selectedMember as StaffMember & { email?: string }).email}`} className="hover:underline">
+{(selectedMember as StaffMember & { email?: string }).email}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="md:col-span-2 space-y-4">
+                      {selectedMember.bio && (
+                        <div>
+                          <h3 className="text-lg font-semibold mb-2">Biography</h3>
+                          <p className="text-muted-foreground">
+                            {selectedMember.bio}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        {selectedMember.qualifications && (
+                          <Card>
+                            <CardContent className="p-4">
+                              <h4 className="font-medium flex items-center text-primary mb-2">
+                                <GraduationCap className="h-5 w-5 mr-2 text-blue-500" />
+                                Qualifications
+                              </h4>
+                              <p>{selectedMember.qualifications}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        
+                        {selectedMember.experience && (
+                          <Card>
+                            <CardContent className="p-4">
+                              <h4 className="font-medium flex items-center text-primary mb-2">
+                                <Award className="h-5 w-5 mr-2 text-yellow-500" />
+                                Experience
+                              </h4>
+                              <p>{selectedMember.experience} Years</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        
+                        {(selectedMember as StaffMember & { specialization?: string }).specialization && (
+                          <Card>
+                            <CardContent className="p-4">
+                              <h4 className="font-medium flex items-center text-primary mb-2">
+                                <BookOpen className="h-5 w-5 mr-2 text-green-500" />
+                                Specialization
+                              </h4>
+                              <p>{(selectedMember as StaffMember & { specialization?: string }).specialization}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
         </section>
       </Layout>
     );
@@ -103,16 +222,24 @@ export default function Staff() {
                 <span>Certified Professionals</span>
               </div>
             </div>
+            
+            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-md mx-auto">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">All Staff</TabsTrigger>
+                <TabsTrigger value="directors">Directors</TabsTrigger>
+                <TabsTrigger value="teachers">Teachers</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {staff.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {staff.map((member, index) => (
+              {filterStaffByTab(staff).map((member, index) => (
                 <Card
                   key={member.id}
                   className="card-elevated hover-lift group cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
                   style={{ animationDelay: `${index * 0.1}s` }}
-                  onClick={() => setSelectedMember(member)}
+                  onClick={() => handleOpenProfile(member)}
                 >
                   <CardContent className="p-6 text-center">
                     <div className="relative mb-6">
@@ -121,11 +248,16 @@ export default function Staff() {
                           <img
                             src={member.photo_url}
                             alt={member.name}
-                            className="w-24 h-24 rounded-full object-cover mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white"
+                            className="w-32 h-32 rounded-full object-cover mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white"
+                            onError={(e) => {
+                              console.error(`Failed to load image: ${member.photo_url}`);
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder.svg';
+                            }}
                           />
                         ) : (
-                          <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white">
-                            <User className="h-12 w-12 text-primary" />
+                          <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white">
+                            <User className="h-16 w-16 text-primary" />
                           </div>
                         )}
                         {member.is_director && (
@@ -200,6 +332,11 @@ export default function Staff() {
                         src={selectedMember.photo_url}
                         alt={selectedMember.name}
                         className="w-32 h-32 rounded-full object-cover mx-auto shadow-xl border-4 border-white"
+                        onError={(e) => {
+                          console.error(`Failed to load image: ${selectedMember.photo_url}`);
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder.svg';
+                        }}
                       />
                     ) : (
                       <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto shadow-xl border-4 border-white">

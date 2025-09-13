@@ -102,6 +102,11 @@ export default function DirectorSection() {
                   src={director.photo_url}
                   alt={director.name}
                   className="w-full h-96 object-cover rounded-2xl shadow-medium"
+                  onError={(e) => {
+                    console.error(`Failed to load director image: ${director.photo_url}`);
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
                 />
               ) : (
                 <div className="w-full h-96 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl flex items-center justify-center shadow-medium">
