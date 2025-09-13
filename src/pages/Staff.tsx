@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { User, GraduationCap, Award, Mail, Star, BookOpen, Users, X } from "lucide-react";
@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StaffMember {
   id: string;
@@ -45,9 +47,10 @@ export default function Staff() {
 
   const fetchStaff = async () => {
     try {
+      // Use a more optimized query with fewer fields initially
       const { data, error } = await supabase
         .from('staff')
-        .select('*')
+        .select('id, name, position, qualifications, experience, photo_url, is_director, display_order')
         .order('is_director', { ascending: false })
         .order('display_order', { ascending: true })
         .order('name', { ascending: true });
@@ -103,15 +106,12 @@ export default function Staff() {
                     <div className="text-center">
                       <div className="w-40 h-40 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 ring-4 ring-primary/10">
                         {selectedMember.photo_url ? (
-                          <img 
-                            src={selectedMember.photo_url} 
-                            alt={selectedMember.name} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.error(`Failed to load image: ${selectedMember.photo_url}`);
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder.svg';
-                            }}
+                          <OptimizedImage
+                            id={`staff-detail-${selectedMember.id}`}
+                            src={selectedMember.photo_url}
+                            alt={selectedMember.name}
+                            className="w-full h-full"
+                            priority={true}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -245,15 +245,11 @@ export default function Staff() {
                     <div className="relative mb-6">
                       <div className="relative">
                         {member.photo_url ? (
-                          <img
+                          <OptimizedImage
+                            id={`staff-card-${member.id}`}
                             src={member.photo_url}
                             alt={member.name}
-                            className="w-32 h-32 rounded-full object-cover mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white"
-                            onError={(e) => {
-                              console.error(`Failed to load image: ${member.photo_url}`);
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder.svg';
-                            }}
+                            className="w-32 h-32 rounded-full mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white"
                           />
                         ) : (
                           <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white">

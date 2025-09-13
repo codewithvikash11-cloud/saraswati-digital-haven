@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Image, Video, FolderOpen, Calendar, Info } from "lucide-react";
@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface GalleryCategory {
   id: string;
@@ -39,8 +41,8 @@ export default function Gallery() {
   const fetchData = async () => {
     try {
       const [categoriesResult, itemsResult] = await Promise.all([
-        supabase.from('gallery_categories').select('*').order('name'),
-        supabase.from('gallery_items').select('*').order('created_at', { ascending: false })
+        supabase.from('gallery_categories').select('id, name, description').order('name'),
+        supabase.from('gallery_items').select('id, title, description, media_url, media_type, category_id, created_at').order('created_at', { ascending: false })
       ]);
 
       if (categoriesResult.error) {
@@ -146,7 +148,8 @@ export default function Gallery() {
                   <CardContent className="p-0">
                     <div className="relative">
                       {item.media_type === 'image' ? (
-                        <img
+                        <OptimizedImage
+                          id={`gallery-item-${item.id}`}
                           src={item.media_url}
                           alt={item.title || 'Gallery item'}
                           className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
