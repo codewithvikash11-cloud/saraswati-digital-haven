@@ -45,16 +45,25 @@ export default function AdminLogin() {
         return;
       }
       
-      const { error, success } = await signIn(email, password);
+      console.log('Attempting to sign in with email:', email);
+      const { error: signInError, success } = await signIn(email, password);
       
-      if (error) {
-        setError(error.message || "Failed to sign in");
+      if (signInError) {
+        console.error('Sign in error:', signInError);
+        setError(signInError.message || "Failed to sign in. Please check your credentials.");
+        toast.error("Login failed");
       } else if (success) {
+        console.log('Sign in successful, checking admin status...');
         toast.success("Welcome to the admin panel");
-        navigate("/admin");
+        // Small delay to allow state to update
+        setTimeout(() => {
+          navigate("/admin");
+        }, 500);
       }
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+      console.error('Unexpected error during login:', err);
+      const errorMessage = err.message || "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
       toast.error("Login failed");
     } finally {
       setLoading(false);

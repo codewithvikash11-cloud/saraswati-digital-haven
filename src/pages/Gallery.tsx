@@ -1,17 +1,14 @@
 import { useEffect, useState, Suspense } from "react";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { Image, Video, FolderOpen, Calendar, Info } from "lucide-react";
+import { Image as ImageIcon, Video as VideoIcon, FolderOpen, Calendar, Info, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-<<<<<<< HEAD
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Skeleton } from "@/components/ui/skeleton";
-=======
->>>>>>> c1743d695eea39530dc7cda6db26b46b8493efe7
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GalleryCategory {
   id: string;
@@ -33,37 +30,52 @@ export default function Gallery() {
   const [categories, setCategories] = useState<GalleryCategory[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (retryCount = 0) => {
+    setLoading(true);
+    setError(null);
+    
     try {
       const [categoriesResult, itemsResult] = await Promise.all([
-        supabase.from('gallery_categories').select('id, name, description').order('name'),
-        supabase.from('gallery_items').select('id, title, description, media_url, media_type, category_id, created_at').order('created_at', { ascending: false })
+        supabase
+          .from('gallery_categories')
+          .select('id, name, description')
+          .order('name')
+          .limit(100), // Add limit to prevent timeouts
+        supabase
+          .from('gallery_items')
+          .select('id, title, description, media_url, media_type, category_id, created_at')
+          .order('created_at', { ascending: false })
+          .limit(50) // Add limit to prevent timeouts
       ]);
 
-      if (categoriesResult.error) {
-        console.error('Error fetching categories:', categoriesResult.error);
-      } else {
-        setCategories(categoriesResult.data || []);
-      }
+      if (categoriesResult.error) throw categoriesResult.error;
+      if (itemsResult.error) throw itemsResult.error;
 
-      if (itemsResult.error) {
-        console.error('Error fetching gallery items:', itemsResult.error);
-      } else {
-        setGalleryItems((itemsResult.data || []).map(item => ({
-          ...item,
-          media_type: item.media_type as 'image' | 'video'
-        })));
-      }
+      setCategories(categoriesResult.data || []);
+      setGalleryItems((itemsResult.data || []).map(item => ({
+        ...item,
+        media_type: item.media_type as 'image' | 'video'
+      })));
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching gallery data:', error);
+      setError('Failed to load gallery. ' + (error as Error).message);
+      
+      // Retry logic (max 3 retries)
+      if (retryCount < 3) {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff
+        setTimeout(() => fetchData(retryCount + 1), delay);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -84,19 +96,33 @@ export default function Gallery() {
     setIsDialogOpen(true);
   };
 
-  if (loading) {
+  if (loading && !galleryItems.length) {
     return (
       <Layout>
         <section className="section-padding bg-subtle-gradient">
           <div className="container-custom">
             <div className="animate-pulse">
-              <div className="h-8 bg-muted rounded w-1/3 mx-auto mb-12"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="h-10 bg-muted rounded w-1/3 mx-auto mb-8"></div>
+              <div className="h-4 bg-muted rounded w-1/4 mx-auto mb-12"></div>
+              
+              {/* Category tabs skeleton */}
+              <div className="flex space-x-2 mb-8 overflow-x-auto pb-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-10 bg-muted rounded-full w-24"></div>
+                ))}
+              </div>
+              
+              {/* Gallery items skeleton */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-card rounded-xl p-6 space-y-4">
-                    <div className="h-48 bg-muted rounded-lg"></div>
-                    <div className="h-6 bg-muted rounded w-3/4"></div>
-                    <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div key={i} className="bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <div className="h-48 bg-muted w-full"></div>
+                    <div className="p-4">
+                      <div className="h-5 bg-muted rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-muted rounded w-1/2 mb-3"></div>
+                      <div className="h-3 bg-muted rounded w-full"></div>
+                      <div className="h-3 bg-muted rounded w-5/6 mt-1"></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -119,6 +145,25 @@ export default function Gallery() {
               Explore our collection of photos and videos showcasing school life, events, and achievements
             </p>
           </div>
+
+          {error && (
+            <Alert variant="destructive" className="mb-8">
+              <div className="flex items-center">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                <AlertDescription className="flex items-center">
+                  {error} 
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="ml-2 h-6 px-2 text-xs"
+                    onClick={() => fetchData()}
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                  </Button>
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
 
           {categories.length > 0 && (
             <div className="mb-8">
@@ -151,32 +196,43 @@ export default function Gallery() {
                   <CardContent className="p-0">
                     <div className="relative">
                       {item.media_type === 'image' ? (
-                        <OptimizedImage
-                          id={`gallery-item-${item.id}`}
-                          src={item.media_url}
-                          alt={item.title || 'Gallery item'}
-                          className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
-                        />
+                        <div className="w-full h-48 bg-muted/20 flex items-center justify-center overflow-hidden">
+                          <img
+                            src={imageLoadError[item.id] ? '/placeholder-image.jpg' : item.media_url}
+                            alt={item.title || 'Gallery image'}
+                            className={`w-full h-full object-cover transition-opacity duration-300 ${
+                              imageLoadError[item.id] ? 'opacity-50' : 'group-hover:scale-105 transition-transform duration-300'
+                            }`}
+                            onError={() => setImageLoadError(prev => ({ ...prev, [item.id]: true }))}
+                            loading="lazy"
+                          />
+                        </div>
                       ) : (
                         <div className="w-full h-48 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center relative group">
-                          <Video className="h-12 w-12 text-primary" />
+                          <VideoIcon className="h-12 w-12 text-primary" />
                           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-lg">
                             <Button variant="secondary" size="sm" className="pointer-events-none">
-                              <Video className="h-4 w-4 mr-2" /> Play Video
+                              <VideoIcon className="h-4 w-4 mr-2" /> Play Video
                             </Button>
                           </div>
                         </div>
                       )}
                       
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-primary/90 text-white">
+                      <div className="absolute top-2 left-2 flex flex-col space-y-1">
+                        <Badge className="bg-primary/90 text-white text-xs">
                           {item.media_type === 'image' ? (
-                            <Image className="h-3 w-3 mr-1" />
+                            <ImageIcon className="h-3 w-3 mr-1" />
                           ) : (
-                            <Video className="h-3 w-3 mr-1" />
+                            <VideoIcon className="h-3 w-3 mr-1" />
                           )}
                           {item.media_type}
                         </Badge>
+                        {imageLoadError[item.id] && (
+                          <Badge variant="outline" className="bg-background/80 text-xs">
+                            <AlertCircle className="h-3 w-3 mr-1 text-yellow-500" />
+                            Image not available
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     
@@ -206,7 +262,7 @@ export default function Gallery() {
           ) : (
             <div className="text-center py-12 fade-in">
               <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Image className="h-10 w-10 text-primary" />
+                <ImageIcon className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 {selectedCategory === "all" ? "No Gallery Items Yet" : "No Items in This Category"}
@@ -235,6 +291,10 @@ export default function Gallery() {
                           src={selectedItem.media_url} 
                           alt={selectedItem.title || 'Gallery item'} 
                           className="w-full h-full object-contain"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/placeholder-image.jpg';
+                          }}
                         />
                       ) : (
                         <video 
@@ -251,12 +311,12 @@ export default function Gallery() {
                         <Badge variant="outline">
                           {selectedItem.media_type === 'image' ? (
                             <>
-                              <Image className="h-3 w-3 mr-1" />
+                              <ImageIcon className="h-3 w-3 mr-1" />
                               Image
                             </>
                           ) : (
                             <>
-                              <Video className="h-3 w-3 mr-1" />
+                              <VideoIcon className="h-3 w-3 mr-1" />
                               Video
                             </>
                           )}

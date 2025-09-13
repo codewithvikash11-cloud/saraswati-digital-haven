@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Users, 
   Calendar, 
-  Image, 
+  Image as ImageIcon,
   Newspaper, 
   Trophy, 
   Mail, 
@@ -27,11 +28,72 @@ import {
   Clock,
   AlertCircle,
   ArrowUpRight,
-  MapPin
+  MapPin,
+  Loader2,
+  ShieldAlert
 } from "lucide-react";
+// Using standard img tag instead of Next.js Image component
 import { useNavigate } from "react-router-dom";
 import { format, subDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+
+// Admin Only Wrapper Component
+const AdminOnly = ({ children, loading, isAdmin }: { children: React.ReactNode, loading: boolean, isAdmin: boolean }) => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // If not an admin and not loading, redirect to login after a short delay
+    if (!loading && !isAdmin) {
+      const timer = setTimeout(() => {
+        navigate('/admin/login');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isAdmin, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Verifying admin access...</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 p-6 text-center max-w-md mx-auto">
+        <div className="p-4 bg-destructive/10 rounded-full">
+          <ShieldAlert className="h-12 w-12 text-destructive" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-foreground">Access Denied</h2>
+          <p className="text-muted-foreground">
+            You don't have permission to access the admin dashboard. 
+            Please sign in with an admin account.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <Button 
+            onClick={() => navigate('/admin/login')} 
+            className="w-full sm:w-auto"
+          >
+            Go to Login
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/')}
+            className="w-full sm:w-auto"
+          >
+            Return to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
 
 interface DashboardStats {
   staffCount: number;
@@ -71,8 +133,10 @@ interface RecentEvent {
 }
 
 export default function AdminDashboard() {
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     staffCount: 0,
     eventsCount: 0,
@@ -80,14 +144,19 @@ export default function AdminDashboard() {
     newsCount: 0,
     achievementsCount: 0,
     unreadInquiries: 0,
-    totalInquiries: 0,
+    totalInquiries: 0
   });
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [recentInquiries, setRecentInquiries] = useState<ContactInquiry[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<RecentEvent[]>([]);
-  const [error, setError] = useState<string | null>(null);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/admin/login');
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -277,7 +346,14 @@ export default function AdminDashboard() {
               <img 
                 src="/logo.svg" 
                 alt="Saraswati School Logo" 
-                className="w-full h-full object-contain"
+                width={40}
+                height={40}
+                className="object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.src = '/placeholder-logo.png';
+                }}
               />
             </div>
             <div>
@@ -360,7 +436,7 @@ export default function AdminDashboard() {
           <Card className="card-elevated hover-lift">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Gallery Items</CardTitle>
-              <Image className="h-4 w-4 text-primary" />
+              <ImageIcon className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">{stats.galleryItemsCount}</div>
@@ -418,27 +494,11 @@ export default function AdminDashboard() {
                   View All
                 </Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingEvents.length > 0 ? (
                   upcomingEvents.map((event) => (
                     <Card key={event.id} className="card-elevated hover-lift">
-                      <div className="h-40 w-full overflow-hidden rounded-t-lg">
-                        {event.image_url ? (
-                          <img 
-                            src={event.image_url} 
-                            alt={event.title} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/placeholder-event.jpg";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center">
-                            <Calendar className="h-12 w-12 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      <CardContent className="pt-4">
+                      <CardContent className="pt-6">
                         <h3 className="font-semibold mb-2 line-clamp-1">{event.title}</h3>
                         <div className="flex items-center text-sm text-muted-foreground mb-1">
                           <Calendar className="h-4 w-4 mr-2" />
@@ -523,7 +583,7 @@ export default function AdminDashboard() {
           <Card className="card-elevated">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Image className="h-5 w-5 text-primary mr-2" />
+                <ImageIcon className="h-5 w-5 text-primary mr-2" />
                 Gallery Management
               </CardTitle>
             </CardHeader>
@@ -620,7 +680,7 @@ export default function AdminDashboard() {
                           {log.action === 'created' && <Plus className="h-5 w-5 text-green-500" />}
                           {log.action === 'updated' && <Edit className="h-5 w-5 text-blue-500" />}
                           {log.action === 'deleted' && <Trash2 className="h-5 w-5 text-red-500" />}
-                          {log.action === 'uploaded' && <Image className="h-5 w-5 text-purple-500" />}
+                          {log.action === 'uploaded' && <ImageIcon className="h-5 w-5 text-purple-500" />}
                           {log.action === 'responded' && <Mail className="h-5 w-5 text-orange-500" />}
                         </div>
                         <div className="h-full w-px bg-border mt-2"></div>

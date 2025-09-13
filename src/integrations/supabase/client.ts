@@ -2,16 +2,35 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://rpmhwvouazwfemhbanco.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwbWh3dm91YXp3ZmVtaGJhbmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2ODcwNjAsImV4cCI6MjA3MzI2MzA2MH0.OO7ApCzRu0vV3QyTG6MS1S4tDZ5o84h1cCXAUIymkac";
+// Get environment variables with fallbacks
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://rpmhwvouazwfemhbanco.supabase.co";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwbWh3dm91YXp3ZmVtaGJhbmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2ODcwNjAsImV4cCI6MjA3MzI2MzA2MH0.OO7ApCzRu0vV3QyTG6MS1S4tDZ5o84h1cCXAUIymkac";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+// Validate required environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase configuration. Please check your .env file.');
+}
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+// Create the Supabase client with enhanced configuration
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+  },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'saraswati-digital-haven/1.0',
+    },
+  },
+});
+
+// Add error logging for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event, session);
 });

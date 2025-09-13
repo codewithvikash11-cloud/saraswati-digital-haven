@@ -51,20 +51,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAdminStatus = async (userId: string) => {
     try {
+      console.log('🔒 Checking admin status for user ID:', userId);
+      
+      // Get the current session first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('❌ No active session found');
+        setIsAdmin(false);
+        return;
+      }
+      
+      const user = session.user;
+      
+      if (!user || !user.email) {
+        console.error('❌ No user or email found in session');
+        setIsAdmin(false);
+        return;
+      }
+      
+      // List of admin emails (case-insensitive)
+      const adminEmails = [
+        'admin@example.com',
+        'w3softwaresolution@gmail.com',
+        'your-admin-email@example.com' // Add your admin email here
+      ];
+      
+      const normalizedEmail = user.email.toLowerCase().trim();
+      
+      if (adminEmails.some(email => email.toLowerCase() === normalizedEmail)) {
+        console.log('✅ User is admin by email:', user.email);
+        setIsAdmin(true);
+        return;
+      }
+      
+      // Fallback to checking profiles table if exists
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
+        console.log('Error checking profiles table, falling back to email check:', error.message);
+        // If profiles table doesn't exist, check if user has admin role in auth metadata
+        const userRoles = user.user_metadata?.roles || [];
+        setIsAdmin(userRoles.includes('admin'));
       } else {
+        console.log('User role from profiles:', data?.role);
         setIsAdmin(data?.role === 'admin');
       }
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('Error in checkAdminStatus:', error);
       setIsAdmin(false);
     }
   };
