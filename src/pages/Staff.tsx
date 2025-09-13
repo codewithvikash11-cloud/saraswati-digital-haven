@@ -7,8 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+<<<<<<< HEAD
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Skeleton } from "@/components/ui/skeleton";
+=======
+>>>>>>> c1743d695eea39530dc7cda6db26b46b8493efe7
 
 interface StaffMember {
   id: string;
@@ -106,12 +109,24 @@ export default function Staff() {
                     <div className="text-center">
                       <div className="w-40 h-40 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 ring-4 ring-primary/10">
                         {selectedMember.photo_url ? (
+<<<<<<< HEAD
                           <OptimizedImage
                             id={`staff-detail-${selectedMember.id}`}
                             src={selectedMember.photo_url}
                             alt={selectedMember.name}
                             className="w-full h-full"
                             priority={true}
+=======
+                          <img 
+                            src={selectedMember.photo_url} 
+                            alt={selectedMember.name} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error(`Failed to load image: ${selectedMember.photo_url}`);
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder.svg';
+                            }}
+>>>>>>> c1743d695eea39530dc7cda6db26b46b8493efe7
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -249,7 +264,16 @@ export default function Staff() {
                             id={`staff-card-${member.id}`}
                             src={member.photo_url}
                             alt={member.name}
+<<<<<<< HEAD
                             className="w-32 h-32 rounded-full mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white"
+=======
+                            className="w-32 h-32 rounded-full object-cover mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white"
+                            onError={(e) => {
+                              console.error(`Failed to load image: ${member.photo_url}`);
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder.svg';
+                            }}
+>>>>>>> c1743d695eea39530dc7cda6db26b46b8493efe7
                           />
                         ) : (
                           <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all duration-300 border-4 border-white">
